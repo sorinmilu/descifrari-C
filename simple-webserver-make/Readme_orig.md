@@ -1,7 +1,3 @@
-# Sursa
-
-[https://github.com/labcoder/simple-webserver](https://github.com/labcoder/simple-webserver)
-
 # Simple webserver
 
 This example of a simple webserver is inspired by IBM's really small webserver example, nweb.
@@ -29,9 +25,5 @@ For example, to run it on port 8080, you'd do something like this:
 ```
 ./server 8080 ./ &</pre>
 ```
-
-----
-
-# Descriere
 
 
