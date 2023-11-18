@@ -7,4 +7,6 @@
 
 # Descriere
 
+# Concepte utilizate in program
+
 

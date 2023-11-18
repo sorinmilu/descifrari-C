@@ -154,6 +154,8 @@ void web(int fd, int hit)
 }
 ```
 
+Inceputul functiei main care declara variabilele importante printre care structurile in care se vor gasi adresele socketurilor clientului si serverului.
+
 ```c
 int main(int argc, char **argv)
 {
@@ -163,7 +165,9 @@ int main(int argc, char **argv)
 	static struct sockaddr_in serv_addr;
 ```
 
-Se verifica argumentele primite de program la lansare. 
+Se verifica argumentele primite de program la lansare. In mod normal, argumentele sunt doua, primulk este portul, cel de-al doilea este directorul de unde trebuie citite fisierele care vor fi servite. Lista argumentelor de la linia de comanda este pasata catre functia main (**argv) impreuna cu numarul acestora (argc). Citirea unui argument se face prin apelarea matricii argv: argv[index]. argv[0] este de fiecare data numele programului. 
+
+
 ```c
 	if( argc < 3  || argc > 3 || !strcmp(argv[1], "-?") ) {
 
@@ -183,7 +187,7 @@ In cazul in care este necesar (fie numarul de argumente este gresit, fie primul 
 		exit(0);
 	}
 ```
-In continuare se verifica daca directorul care se trimite ca argument la pornirea serverului este unul dintre directoarele de sistem. Acest lucru nu este permis. In cazul in care se intampla, se imprima un mesaj de eroare si programul se opreste. instructiunea `exit(3)`. Argumentul 3 specifica modul de terminare a programului. Daca programul se termina normal, se va rula exit(0).  
+In continuare se verifica daca directorul care se trimite ca argument la pornirea serverului este unul dintre directoarele de sistem. Acest lucru nu este permis. In cazul in care se intampla, se imprima un mesaj de eroare si programul se opreste. instructiunea `exit(3)`. Argumentul 3 (ca orice alta valoare mai mare decat zero) arata ca programul s-a incheiat cu o eroare. Daca programul se termina normal, se va rula exit(0). Lista directoarelor de sistem este cea de pe sistemele de operare de tip Linux.  
 
 ```c
 	if( !strncmp(argv[2],"/"   ,2 ) || !strncmp(argv[2],"/etc", 5 ) ||
@@ -193,34 +197,82 @@ In continuare se verifica daca directorul care se trimite ca argument la pornire
 		(void)printf("ERROR: Bad top directory %s, see server -?\n",argv[2]);
 		exit(3);
 	}
+```
+
+Orice program are un director de lucru, de obicei directorul din care este lansat executabilul (nu tot timpul). O solicitare de deschidere a unui fisier cu o cale relativa (care nu incepe la radacina sistemului de fisiere) se presupune a fi relativa la directorul de lucru. Pentru a servi fisierele html, programul trebuie sa schimbe directorul de lucru in cel care a fost oferit ca parametru de intrare. Aceasta se face cu ajutorul instructiunii chdir, care returneaza adevarat (daca operatia a reusit) sau fals (daca operatia a esuat). Operatia poate esua daca directorul tinta nu exista, daca utilizatorul curent nu are drepturi de executie, etc. In cazul in care nu se poate face schimbarea in directorul tinta, programul se opreste cu eroare.   
+
+```c
 	if(chdir(argv[2]) == -1){ 
 		(void)printf("ERROR: Can't Change to directory %s\n",argv[2]);
 		exit(4);
 	}
+```
 
+Urmatorul set de instructiuni porneste programul ca proces de tip daemon. Un proces de tip daemon se detaseaza de orice consola si poate rula indefinit in sistemul de operare pana cand logica sa interioara il determina sa se opreasca sau primeste un semnal de oprire de la sistemul de operare. Etapele sunt: 
+
+ - procesul se copiaza pe el insusi intr-un alt proces identic (`fork()`)
+ - procesul parinte dispare
+ - procesul copil executa o serie de operatii necesare pentru detasarea completa
+
+Instructiunea `fork()` separa procesul curent in doua procese identice, un proces "copil" care va primi un nou ID de la sistemul de operare. In cazul in care operatia reuseste, `fork()` va returna id-ul procesului copil care va fi mai mare decat 0 si deci adevarat intr-o instructiune conditionala. `if(fork() != 0)` verifica succesul operatiei si daca acesta se confirma, in acest moment vor exista doua procese identice, procesul parinte si noul proces copil. Pentru a finaliza detasarea procesului copil, procesul parinte trebuie sa se incheie, cea ce se intampla cu instructiunea `return 0;` In acest moment, procesul copil devine unic iar parintele dispare. 
+
+```c
 	if(fork() != 0)
 		return 0; 
+```
+
+Urmatoarele instructuni se executa de catre procesul copil (toate, de aici inainte).
+
+Un proces de tip daemon nu poate primi comenzi de la tastatura, de aceea se bazeaza pe alte mecanisme pentru semnalizare. Unul dintre aceste mecanisme este reprezentat de "semnale" care pot fi trimise de catre sistemul de operare. Fiecare astfel de semnal trebuie conectat cu o functie interna a programului, daca dorim executia anumitor operatii la rpomirea acelui semnal. De exemplu, exista programe de tip server care folosesc un anumit semnal (de obicei SIGHUP) pentru a reincarca informatia din fisierele de configurare, fara sa trebuiasca repornite. 
+
+Cele doua instructiuni care urmeaza au ca efect ignorarea semnalelor SIGCLD si SIGHUP prin conectarea lor cu macro-ul SIG_IGN care determina ignorarea acestor semnale. `(void)` din fata celor doua instructiuni converteste fortat orice valoare returnata intr-o valoare goala. Acest typecast se face pentru a informa compilatorul ca nu suntem interesati in ce va returna functia respectiva si nu dorim sa primim eventualele mesaje de atentionare (warnings) cuy privire la aceste valori. 
+ 
+```c
 	(void)signal(SIGCLD, SIG_IGN); 
 	(void)signal(SIGHUP, SIG_IGN); 
+```
+
+In continuare, procesul copil a mostenit de la procesul parinte tot, inclusiv eventualele fisiere deschise. Cel putin stream-urile standard (STDIN, STDERR si STDOUT) sunt in continuare deschise, ca file descriptors. Astfel, se foloseste close() pentru a inchide toate aceste file descriptors. 0,1 si 2 sunt STDIN, STDOUT si STDERR.  
+
+```c	
 	for(i=0;i<32;i++)
 		(void)close(i);	
+```
+
+Functia setgrp fara argumente va atribui un nou "process group id" procesului copil, detasandu-l complet de parintele care intre timp a disparut. Grupul procesului este un identificator suplimentar in sistemele de operare de tip Unix care permite gruparea proceselor similare pentru operatii de management comune. `setptrp()` este ultima etapa din detasara unui proces de tip daemon. 
+
+```c
 	(void)setpgrp();	
+```
 
+Procesul semnaleaza pornirea prin trimiterea unui mesaj care va fi scris in log. Mesajul contine primul argument al programului (argv[1]) care este portul pe care asculta serverul, impreuna cu pid-ul serverului (obtinut cu instructiunea getpid()).
+
+```c
 	log(LOG,"http server starting",argv[1],getpid());
+```
 
+Urmatorul set de instructiuni transforma procesul (care deocamdata este un simplu daemon) intr-un server. Pentru aceasta, programul va declara un [socket](../Doc-Concepts/sockets.md) si va astepta conexiuni de la clienti. `listenfd = socket(AF_INET, SOCK_STREAM,0)` deschide un socket de retea de tip IPv4 (AF_INET) stream cu protocolul default (TCP). Dupa declararea socketului se vor specifica cateva proprietati ale acestuia: `serv_addr.sin_addr.s_addr = htonl(INADDR_ANY)` face socketul sa asculte pe toate interfetele existente in sistemul de operare iar `serv_addr.sin_port = htons(port)` seteaza portul pe care va asculta serverul. 
+
+Functia bind() asociaza socketul declarat (listenfd) cu o anumita matrice de adrese ((struct sockaddr *)&serv_addr) 
+
+Functia listen deschide propriu-zis socketul (pana acum doar i-am stabilit proprietatile), fiind pregatita sa accepte pana la 64 de conexiuni. 
+
+
+```c
 	if((listenfd = socket(AF_INET, SOCK_STREAM,0)) <0)
 		log(ERROR, "system call","socket",0);
 	port = atoi(argv[1]);
 	if(port < 0 || port >60000)
 		log(ERROR,"Invalid port number try [1,60000]",argv[1],0);
-	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	serv_addr.sin_port = htons(port);
 	if(bind(listenfd, (struct sockaddr *)&serv_addr,sizeof(serv_addr)) <0)
 		log(ERROR,"system call","bind",0);
 	if( listen(listenfd,64) <0)
 		log(ERROR,"system call","listen",0);
+```
 
+```c
 	for(hit=1; ;hit++) {
 		length = sizeof(cli_addr);
 		if((socketfd = accept(listenfd, (struct sockaddr *)&cli_addr, &length)) < 0)
