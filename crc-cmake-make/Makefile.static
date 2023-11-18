@@ -1,0 +1,15 @@
+CC = gcc
+CFLAGS = -Wall -g
+
+SRC = main.c crc.c
+OBJ = $(SRC:.c=.o)
+TARGET = crcbin
+
+$(TARGET): $(OBJ)
+	$(CC) $(CFLAGS) -o $@ $^
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+clean:
+	rm -f $(OBJ) $(TARGET)
