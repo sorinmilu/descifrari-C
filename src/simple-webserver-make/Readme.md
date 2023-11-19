@@ -9,4 +9,5 @@
 
 # Concepte utilizate in program
 
-
+[network sockets](../../Concepts/sockets/)
+[transformnarea unui program intr-un daemon](../../Concepts/daemonize/)

@@ -17,7 +17,7 @@ void cleanup() {
 }
 
 void sigkill_handler(int signum) {
-    // This does not work - sigkill is handled by OS
+    // This does not work - sigkill is handledx
     syslog(LOG_INFO, "Oh, you killed me.");
 }
 
@@ -26,7 +26,7 @@ void sighup_handler(int signum) {
 }
 
 int main() {
-    // Open syslog
+    // Open syslog (from syslog.h)
     openlog("daemon_example", LOG_PID | LOG_NDELAY, LOG_DAEMON);
 
     // Set up a signal handler for cleanup
