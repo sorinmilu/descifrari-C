@@ -62,97 +62,9 @@ struct {
 	{0,0} };
 ```
 
-```c
-void log(int type, char *s1, char *s2, int num)
-{
-	int fd ;
-	char logbuffer[BUFSIZE*2];
 
-	switch (type) {
-	case ERROR: (void)sprintf(logbuffer,"ERROR: %s:%s Errno=%d exiting pid=%d",s1, s2, errno,getpid()); break;
-	case SORRY: 
-		(void)sprintf(logbuffer, "<HTML><BODY><H1>Web Server Sorry: %s %s</H1></BODY></HTML>\r\n", s1, s2);
-		(void)write(num,logbuffer,strlen(logbuffer));
-		(void)sprintf(logbuffer,"SORRY: %s:%s",s1, s2); 
-		break;
-	case LOG: (void)sprintf(logbuffer," INFO: %s:%s:%d",s1, s2,num); break;
-	}	
-	
-	if((fd = open("server.log", O_CREAT| O_WRONLY | O_APPEND,0644)) >= 0) {
-		(void)write(fd,logbuffer,strlen(logbuffer)); 
-		(void)write(fd,"\n",1);      
-		(void)close(fd);
-	}
-	if(type == ERROR || type == SORRY) exit(3);
-}
-```
 
-```c
-void web(int fd, int hit)
-{
-	int j, file_fd, buflen, len;
-	long i, ret;
-	char * fstr;
-	static char buffer[BUFSIZE+1];
-
-	ret =read(fd,buffer,BUFSIZE); 
-	if(ret == 0 || ret == -1) {
-		log(SORRY,"failed to read browser request","",fd);
-	}
-	if(ret > 0 && ret < BUFSIZE)	
-		buffer[ret]=0;	
-	else buffer[0]=0;
-
-	for(i=0;i<ret;i++)	
-		if(buffer[i] == '\r' || buffer[i] == '\n')
-			buffer[i]='*';
-	log(LOG,"request",buffer,hit);
-
-	if( strncmp(buffer,"GET ",4) && strncmp(buffer,"get ",4) )
-		log(SORRY,"Only simple GET operation supported",buffer,fd);
-
-	for(i=4;i<BUFSIZE;i++) { 
-		if(buffer[i] == ' ') { 
-			buffer[i] = 0;
-			break;
-		}
-	}
-
-	for(j=0;j<i-1;j++) 	
-		if(buffer[j] == '.' && buffer[j+1] == '.')
-			log(SORRY,"Parent directory (..) path names not supported",buffer,fd);
-
-	if( !strncmp(&buffer[0],"GET /\0",6) || !strncmp(&buffer[0],"get /\0",6) ) 
-		(void)strcpy(buffer,"GET /index.html");
-
-	buflen=strlen(buffer);
-	fstr = (char *)0;
-	for(i=0;extensions[i].ext != 0;i++) {
-		len = strlen(extensions[i].ext);
-		if( !strncmp(&buffer[buflen-len], extensions[i].ext, len)) {
-			fstr =extensions[i].filetype;
-			break;
-		}
-	}
-	if(fstr == 0) log(SORRY,"file extension type not supported",buffer,fd);
-
-	if(( file_fd = open(&buffer[5],O_RDONLY)) == -1) 
-		log(SORRY, "failed to open file",&buffer[5],fd);
-
-	log(LOG,"SEND",&buffer[5],hit);
-
-	(void)sprintf(buffer,"HTTP/1.0 200 OK\r\nContent-Type: %s\r\n\r\n", fstr);
-	(void)write(fd,buffer,strlen(buffer));
-
-	while (	(ret = read(file_fd, buffer, BUFSIZE)) > 0 ) {
-		(void)write(fd,buffer,ret);
-	}
-#ifdef LINUX
-	sleep(1);
-#endif
-	exit(1);
-}
-```
+# Functia main
 
 Inceputul functiei main care declara variabilele importante printre care structurile in care se vor gasi adresele socketurilor clientului si serverului.
 
@@ -274,26 +186,147 @@ Functia listen deschide propriu-zis socketul (pana acum doar i-am stabilit propr
 
 Urmatoarea secventa de linii de cod reprezinta propriu-zis partea de server web. Ca orice daemon, exista o bucla infinita care asteapta conextiuni de la client. `if((socketfd = accept(listenfd, (struct sockaddr *)&cli_addr, &length)) < 0)` verifica aparitia unei astfel de conexiuni. 
 
-Daca conexiunea este stabilta procesul curent va crea un proces copil care va apela functia web . 
+Bucla infinita se obtine prin evitarea conditiei din mijloc de la for (cea care limiteaza contorul in partea superioara). In acelasi timp, acastra structura a unei bucle infinite permite mentinerea unui contor care numara numarul de executii. 
 
+Functia accept extrage prima conexiune din coada de conexiuni aflate in asteptare, creaza un nou socket cu aceeasi parametrii ca socketul pe care se accepta conexiunea, aloca un nou file descriptor pe noul socket si returneaza acel nou file descriptor. 
 
 ```c
 	for(hit=1; ;hit++) {
 		length = sizeof(cli_addr);
 		if((socketfd = accept(listenfd, (struct sockaddr *)&cli_addr, &length)) < 0)
 			log(ERROR,"system call","accept",0);
+```
 
+Daca conexiunea este stabilta procesul curent va crea un proces copil care va apela functia web. Fiecare client (browser) va determina deschiderea unui alt proces. 
+
+Daca functia fork() returneaza un numar mai mic decat zero inseamna ca opperatia de dublare a procesului nu a reusit, caz in care se logheaza eroarea si programul iese. 
+
+```c
 		if((pid = fork()) < 0) {
 			log(ERROR,"system call","fork",0);
 		}
 		else {
+```
+
+In acest moment trebuie sa separam codul care ruleaza in noul client de codul care ruleaza in parinte. Separarea se face prin examinarea pid-ului - daca suntem in procesul parinte acesta a capatat id-ul procesului copil nou-creat, daca suntem in procesul copil pid-ul este 0. 
+
+In acest moment avem doi file-descriptori: listenfd care reprezinta descriptorul socketului serverului si socketfd care este file-descriptorul socketului conectat al clientului. 
+
+Codul executat in noul proces va inchide socketul listenfd al serverului (care nu este necesar) dupa care va executa functia web
+
+```c
 			if(pid == 0) {
 				(void)close(listenfd);
 				web(socketfd,hit);
+```
+Codul executat in procesul parinte va inchide noul socket socketfd deschis de client. 
+
+```c
+
 			} else {
 				(void)close(socketfd);
 			}
 		}
 	}
+}
+```
+
+## Functia web
+
+Functia web primeste ca argumente un file descriptor care corespunde unui socket deschis de catre un client si numarul solicitarii. Aceasta va analiza solicitarea pe care a trimis-o clientul prin citirea socketului la care clientul este conectat si daca solicitarea este valida, va trimite resursa pe care clientul o cere. 
+
+
+```c
+void web(int fd, int hit)
+{
+	int j, file_fd, buflen, len;
+	long i, ret;
+	char * fstr;
+	static char buffer[BUFSIZE+1];
+
+	ret =read(fd,buffer,BUFSIZE); 
+	if(ret == 0 || ret == -1) {
+		log(SORRY,"failed to read browser request","",fd);
+	}
+	if(ret > 0 && ret < BUFSIZE)	
+		buffer[ret]=0;	
+	else buffer[0]=0;
+
+	for(i=0;i<ret;i++)	
+		if(buffer[i] == '\r' || buffer[i] == '\n')
+			buffer[i]='*';
+	log(LOG,"request",buffer,hit);
+
+	if( strncmp(buffer,"GET ",4) && strncmp(buffer,"get ",4) )
+		log(SORRY,"Only simple GET operation supported",buffer,fd);
+
+	for(i=4;i<BUFSIZE;i++) { 
+		if(buffer[i] == ' ') { 
+			buffer[i] = 0;
+			break;
+		}
+	}
+
+	for(j=0;j<i-1;j++) 	
+		if(buffer[j] == '.' && buffer[j+1] == '.')
+			log(SORRY,"Parent directory (..) path names not supported",buffer,fd);
+
+	if( !strncmp(&buffer[0],"GET /\0",6) || !strncmp(&buffer[0],"get /\0",6) ) 
+		(void)strcpy(buffer,"GET /index.html");
+
+	buflen=strlen(buffer);
+	fstr = (char *)0;
+	for(i=0;extensions[i].ext != 0;i++) {
+		len = strlen(extensions[i].ext);
+		if( !strncmp(&buffer[buflen-len], extensions[i].ext, len)) {
+			fstr =extensions[i].filetype;
+			break;
+		}
+	}
+	if(fstr == 0) log(SORRY,"file extension type not supported",buffer,fd);
+
+	if(( file_fd = open(&buffer[5],O_RDONLY)) == -1) 
+		log(SORRY, "failed to open file",&buffer[5],fd);
+
+	log(LOG,"SEND",&buffer[5],hit);
+
+	(void)sprintf(buffer,"HTTP/1.0 200 OK\r\nContent-Type: %s\r\n\r\n", fstr);
+	(void)write(fd,buffer,strlen(buffer));
+
+	while (	(ret = read(file_fd, buffer, BUFSIZE)) > 0 ) {
+		(void)write(fd,buffer,ret);
+	}
+#ifdef LINUX
+	sleep(1);
+#endif
+	exit(1);
+}
+```
+
+
+## Functia log
+
+```c
+void log(int type, char *s1, char *s2, int num)
+{
+	int fd ;
+	char logbuffer[BUFSIZE*2];
+
+	switch (type) {
+	case ERROR: (void)sprintf(logbuffer,"ERROR: %s:%s Errno=%d exiting pid=%d",s1, s2, errno,getpid()); break;
+	case SORRY: 
+		(void)sprintf(logbuffer, "<HTML><BODY><H1>Web Server Sorry: %s %s</H1></BODY></HTML>\r\n", s1, s2);
+		(void)write(num,logbuffer,strlen(logbuffer));
+		(void)sprintf(logbuffer,"SORRY: %s:%s",s1, s2); 
+		break;
+	case LOG: (void)sprintf(logbuffer," INFO: %s:%s:%d",s1, s2,num); break;
+	}	
+	
+	if((fd = open("server.log", O_CREAT| O_WRONLY | O_APPEND,0644)) >= 0) {
+		(void)write(fd,logbuffer,strlen(logbuffer)); 
+		(void)write(fd,"\n",1);      
+		(void)close(fd);
+	}
+	if(type == ERROR || type == SORRY) exit(3);
 }
 ```
