@@ -272,6 +272,11 @@ Functia listen deschide propriu-zis socketul (pana acum doar i-am stabilit propr
 		log(ERROR,"system call","listen",0);
 ```
 
+Urmatoarea secventa de linii de cod reprezinta propriu-zis partea de server web. Ca orice daemon, exista o bucla infinita care asteapta conextiuni de la client. `if((socketfd = accept(listenfd, (struct sockaddr *)&cli_addr, &length)) < 0)` verifica aparitia unei astfel de conexiuni. 
+
+Daca conexiunea este stabilta procesul curent va crea un proces copil care va apela functia web . 
+
+
 ```c
 	for(hit=1; ;hit++) {
 		length = sizeof(cli_addr);
