@@ -154,7 +154,7 @@ Tinta clean va fi executata doar in cazul in care este apelata direct (make clea
 
 Makefile aflat in proiectul original este putin mai explicit: 
 
-```
+```bash
 CFLAGS = -g -O0
 
 ttt: main.o board.o
@@ -168,4 +168,51 @@ board.o: board.c board.h
 
 clean:
 	rm -rf ttt *.o
+```
+
+
+## Constructia cu biblioteca dinamica
+
+
+Fisierul Makefile.dinamic permite compilarea programului astfel incat functiile din bibiooteca board.c sa fie disponibile sub forma de biblioteca dinamica .so. 
+
+
+```bash
+CC = gcc  # C compiler
+CFLAGS = -fPIC -Wall  # C flags
+LDFLAGS = -shared   # linking flags
+EXEFLAGS = -L. -ltttb
+RM = rm -f   # rm command
+TARGET_LIB = libtttb.so  # target lib
+EXECUTABLE = ttt
+SRCS = board.c main.c
+OBJS = $(SRCS:.c=.o)
+
+all: $(TARGET_LIB) $(EXECUTABLE)
+
+$(TARGET_LIB): $(OBJS)
+	$(CC) ${LDFLAGS} -o $@ $^
+
+$(EXECUTABLE): main.o $(LIBRARY)
+	$(CC) -o $@ $< $(EXEFLAGS)
+
+clean:
+	-${RM} ${TARGET_LIB} ${OBJS} $(EXECUTABLE)
+
+```
+
+
+compilarea se face cu specificarea numerlui fisierului Makefile: 
+
+```bash
+make -f Makefile.dinamic
+```
+
+Dupa compilare directorul curent trebuie adaugat la calea generala LD_LIBRARY_PATH
+
+```bash
+export LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH
+
+./ttt
+
 ```
