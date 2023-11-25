@@ -3,11 +3,10 @@ https://github.com/malinengineer/crc/tree/master
 ===
 # CRC
 
-Cyclic Redundancy Check (CRC) este o tehnică de detecție a erorilor folosită în comunicații digitale și stocarea datelor. Este un algoritm de control al erorilor care implică adăugarea unui număr specific de biți la un set de date, iar receptorul utilizează același algoritm pentru a verifica integritatea datelor primite.
+Cyclic Redundancy Check (CRC) este o tehnică de detecție a erorilor folosită în comunicații digitale și stocarea datelor. Este un algoritm de control al erorilor care implică adăugarea unei semnaturi binare (un număr specific de biți) la un set de date care se transmite, si verificarea acestei semnaturi binare la recentie (utilizand același algoritm).
 
-Bitii adaugati reprezinta restul impartirii binare a mesajului initial la care se adauga un numar de biti suplimentari la un anumit numar binar special ales. Acest set de biti se adauga la finalul mesajului. 
+Transmiterea datelor pe retele se face prin impartirea acestora in frame-uri - in fragmente de date care sunt reconectate la primire. Fiecare frame are o serie de informatii de header impreuna cu o suma de control CRC. CRC se calculeaza printr-un algoritm special (impartirea binara a bitilor din frame la un aunit pattern binar predefinit, pe care il cunoaste atat cel care trimite cat si cel care primeste - crc este restul acestei impartiri). 
 
-Restul impartirii unui numar la un alt numar se afla tot timpul in intervalul 0 - divizor. 
 
 
 
