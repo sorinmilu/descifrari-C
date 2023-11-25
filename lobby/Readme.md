@@ -1,0 +1,1 @@
+Proiecte care se compileaza si asteapta sa fie analizate
