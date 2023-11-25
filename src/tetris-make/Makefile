@@ -1,4 +1,3 @@
-https://github.com/alerighi/tetris
 
 
 # tetris - a small ncursess tetris game
