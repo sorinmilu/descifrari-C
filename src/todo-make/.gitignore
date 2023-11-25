@@ -1,0 +1,9 @@
+.*.swp
+.*.swo
+test*
+main
+todo
+todo.log
+*.1
+*.o
+*.out
