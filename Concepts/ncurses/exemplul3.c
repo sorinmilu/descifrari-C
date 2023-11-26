@@ -2,32 +2,17 @@
 
 int main()
 {	int ch;
-
 	initscr();			/* Start curses mode 		*/
-	raw();				/* Line buffering disabled	*/
-	keypad(stdscr, TRUE);		/* We get F1, F2 etc..		*/
 	noecho();			/* Don't echo() while we do getch */
 
-    	printw("Type any character to see it in bold\n");
-	ch = getch();			/* If raw() hadn't been called
-					 * we have to press enter before it
-					 * gets to the program 		*/
-	if(ch == KEY_F(2))		/* Without keypad enabled this will */
-		printw("F2 Key pressed");/*  not get to us either	*/
-					/* Without noecho() some ugly escape
-					 * charachters might have been printed
-					 * on screen			*/
-	else
-	{	
-		printw("The pressed key is ");
-		attron(A_BOLD);
-		printw("%c", ch);
-		attroff(A_BOLD);
-	}
+    printw("Scrieti un caracter si va fi afisat in culori inversate\n");
+	ch = getch();
+	printw("Caracterul introdus este ");
+	attron(A_REVERSE);
+	printw("%c", ch);
+	attroff(A_REVERSE);
 
-	refresh();			/* Print it on to the real screen */
-    	getch();			/* Wait for user input */
+    getch();			/* Wait for user input */
 	endwin();			/* End curses mode		  */
-
 	return 0;
 }

@@ -101,3 +101,147 @@ attroff este opusul lui attron - reseteaza anumite atribute ale ecranului.
 	return 0;
 }
 ```
+
+# Exemplul 3
+
+Exemplul 3 demonstreaza preluarea unui caracter de la consola si afisarea lui cu culorile inversate. 
+
+```c
+
+#include <ncurses.h>
+
+int main()
+{	int ch;
+	initscr();			/* Start curses mode 		*/
+```
+Noecho este o functie care opreste afisarea automata a caracterelor introduse de catre utilizator (echo-ing), astfel incat programul sa le poata prelua si transforma inainte de afisare.
+
+```c
+	noecho();			/* Don't echo() while we do getch */
+```
+
+printw este similar cu printf cu exceptia faptului ca afisarea se face in bufferul ncurses, nu in terminalul normal.  
+```c
+    printw("Scrieti un caracter si va fi afisat in culori inversate\n");
+```
+
+getch va astepta introducerea unui caracter de catre utilizator si il va stoca in variabila ch
+
+```c
+	ch = getch();
+```
+
+printw va afisa mesajul respectiv
+
+```c
+	printw("Caracterul introdus este ");
+```
+
+attron si attroff sunt utilizate pentru a "porni" si "opri" anumite atribute, in acest caz cel care determina inversarea culorilor. 
+
+```c
+	attron(A_REVERSE);
+	printw("%c", ch);
+	attroff(A_REVERSE);
+```
+
+
+
+```c
+    getch();			/* Wait for user input */
+	endwin();			/* End curses mode		  */
+	return 0;
+}
+
+```
+
+# Exemplul 4
+
+Exemplul 4 afiseaza cuvantul "HEI" cu trei culori diferite. 
+
+```c
+
+#include <curses.h>
+
+```
+
+Incepem prin a defini o fereastra - un pointer catre o structura de tip WINDOW definita in ncurses.h
+
+```c
+WINDOW *title_win;
+```
+
+In continuare, construim sirul care va reprezenta cele trei litere. Ceea ce se vede in continuare este in realitate un sir continuu de caractere 
+
+```c
+const char TITLE[] =
+	"11  11  222222  33\n"
+	"11  11  22      33\n"
+	"111111  22222   33\n"
+	"11  11  22      33\n"
+	"11  11  222222  33\n";
+
+
+int main(void) {
+	initscr();
+
+```
+
+initializam sistemul de culori si trei perechi de culoare cu fundal negru
+
+```c
+	start_color();
+	init_pair(1, COLOR_RED, COLOR_BLACK);
+	init_pair(2, COLOR_YELLOW, COLOR_BLACK);
+	init_pair(3, COLOR_BLUE, COLOR_BLACK);
+```
+newwin initializeaza o noua fereastra. O fereastra este o arie din terminal care este controlata de ncurses. 
+fereastra initializata va avea 5 randuri, 44 de coloane si va incepe la randul 3 coloana 10
+
+```c
+	title_win = newwin(5 ,44, 3, 10);
+```
+urmatoarea secventa de instructiuni va afisa cele trei litere astfel: pentru fiecare numar intre 1 si 3 se va afisa un spatiu cu perechea de culoare corespunzatoare
+
+Se initializeaza un pointer catre char care va parcurge tot sirul de caractere TITLE prin incremetare.
+
+```c
+	const char *c;
+```
+
+
+```c
+
+	for (c = TITLE; *c != '\0'; c++) {
+```
+
+Daca se intalneste la pozitia curenta spatiu sau \n atunci el va fi tiparit direct
+
+```c
+		if (*c == '\n' || *c == ' ') {
+			waddch(title_win, (chtype) *c);
+```
+
+Daca nu, inseamna ca avem de-a face cu un numar intreg care reprezinta perechea de culoare catre trebuie afisata. Dar acesta nu este propriu-zis un numar intreg, este reprezentarea ASCII a numarului respectiv care nu corespunde cu valoarea numarului intreg. Pentru a obtine valoarea numarului intreg se scade 48 din valoarea ASCII a numarului respectiv. 
+
+wattron va seta perechea de culoare nr. 1, 2 sau 3 in functie de cifra intalnita. 
+waddch va adauga un spatiu cu culorile inversate (care va aparea ca un bloc)
+wattroff va reseta atributul setat de wattron. 
+
+```c
+		} else {
+			wattron(title_win, COLOR_PAIR(*c - 48));
+			waddch(title_win, ' ' | A_REVERSE);
+			wattroff(title_win, COLOR_PAIR(*c - 48));
+		}
+	}
+```
+
+wgetch asteapta apasarea unui caracter de catre utilizator. De asemenea, wgetch cheama si functia refresh care afiseaza rezultatele instructiunilor anterioare in terminal. 
+
+```c
+
+	wgetch(title_win);
+	endwin();
+}
+```

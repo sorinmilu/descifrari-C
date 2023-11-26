@@ -2,10 +2,7 @@ CC = gcc
 CFLAGS = -Wall
 LIBS = -lncurses
 
-all: hei exemplul1 exemplul2 exemplul3 clock
-
-hei: hei.c
-	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
+all: exemplul1 exemplul2 exemplul3 exemplul4 clock
 
 exemplul1: exemplul1.c
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
@@ -16,8 +13,11 @@ exemplul2: exemplul2.c
 exemplul3: exemplul3.c
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
+exemplul4: exemplul4.c
+	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
+
 clock: clock.c
 	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
 
 clean:
-	rm -f hei exemplul1 exemplul2 exemplul3 clock
+	rm -f exemplul1 exemplul2 exemplul3 exemplul4 clock

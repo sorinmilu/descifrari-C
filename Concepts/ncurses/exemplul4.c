@@ -1,7 +1,5 @@
 #include <curses.h>
 
-const chtype BLOCK = ' ' | A_REVERSE;
-
 WINDOW *title_win;
 
 const char TITLE[] =
@@ -20,7 +18,8 @@ int main(void) {
 	init_pair(2, COLOR_YELLOW, COLOR_BLACK);
 	init_pair(3, COLOR_BLUE, COLOR_BLACK);
 
-	title_win = newwin(5 ,44, 1, 1);
+	title_win = newwin(5 ,44, 2, 10);
+
 	const char *c;
 
 	for (c = TITLE; *c != '\0'; c++) {
@@ -28,7 +27,7 @@ int main(void) {
 			waddch(title_win, (chtype) *c);
 		} else {
 			wattron(title_win, COLOR_PAIR(*c - 48));
-			waddch(title_win, BLOCK);
+			waddch(title_win, ' ' | A_REVERSE);
 			wattroff(title_win, COLOR_PAIR(*c - 48));
 		}
 	}
