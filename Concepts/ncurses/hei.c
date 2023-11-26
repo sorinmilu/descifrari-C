@@ -12,19 +12,15 @@ const char TITLE[] =
 	"11  11  222222  33\n";
 
 
-void draw_text(void) {
+int main(void) {
 	initscr();
-	curs_set(0);           /* nu afisa cursorul */
 
-	/* initializarea culorilor */
-	use_default_colors();
 	start_color();
-	init_pair(1, COLOR_RED, -1);
-	init_pair(2, COLOR_YELLOW, -1);
-	init_pair(3, COLOR_BLUE, -1);
+	init_pair(1, COLOR_RED, COLOR_BLACK);
+	init_pair(2, COLOR_YELLOW, COLOR_BLACK);
+	init_pair(3, COLOR_BLUE, COLOR_BLACK);
 
 	title_win = newwin(5 ,44, 1, 1);
-
 	const char *c;
 
 	for (c = TITLE; *c != '\0'; c++) {
@@ -36,16 +32,8 @@ void draw_text(void) {
 			wattroff(title_win, COLOR_PAIR(*c - 48));
 		}
 	}
+	wgetch(title_win);
 
-	wrefresh(title_win);
-}
-
-
-int main(void) {
-	draw_text();
-	for (;;) {
-		//tine fereastra ncurses deschisa
-				
-	}
+	endwin();
 }
 

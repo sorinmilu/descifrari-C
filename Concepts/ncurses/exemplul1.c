@@ -3,8 +3,7 @@
 int main()
 {	
 	initscr();			/* Start curses mode 		  */
-	printw("Hello World !!!");	/* Print Hello World		  */
-	refresh();			/* Print it on to the real screen */
+	mvprintw(4, 4, "Hello World !!!");	/* Print Hello World		  */
 	getch();			/* Wait for user input */
 	endwin();			/* End curses mode		  */
 
