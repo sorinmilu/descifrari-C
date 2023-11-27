@@ -1,3 +1,5 @@
+/*Cate zile care sunt miercuri pe data de 15 ale unei luni avem intr-un interval de ani*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
