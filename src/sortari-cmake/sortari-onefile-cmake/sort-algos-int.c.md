@@ -71,6 +71,7 @@ void data_swap(void *data1, void *data2, size_t item_size) {
 
 ```
 
+Urmatoarele functii implementeaza algoritmi de sortare
 
 ```c
 /* Functii care implementeaza algoritmi de sortare*/
