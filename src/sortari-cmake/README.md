@@ -18,6 +18,8 @@ Dincolo de implementarea algoritmilor (care este interesanta) ceea ce este util 
 
 [sortari-onedir-cmake](../sortari-cmake/sortari-onedir-cmake/) este un proiect in care functiile sunt separate in mai multe fisiere sursa iar definitiile acestora intr-un fisier de tip header (.h). 
 
+[sortari-github-cmake](../sortari-cmake/sortari-github-cmake/) este proiectul original cu structura intacta
+
 
 ```bash
 

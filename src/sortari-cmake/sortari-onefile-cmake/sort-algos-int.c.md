@@ -1,7 +1,5 @@
-//
-// Created by ismdeep on 2020/1/28.
-//
 
+```c
 #include <stdlib.h>
 #include <sys/time.h>
 #include <stdint.h>
@@ -10,26 +8,42 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-
+```
+```c
 #define ARR_SIZE 20000
+```
 
-// typedef void (*sort_func_t)(void*, void*, size_t, bool (*)(const void*, const void*));
-// typedef void (*sort_int_func_t)(int[], int, bool (*)(const int*, const int*));
-typedef bool (*cmp_func_t) (const void*, const void*);
-// typedef bool (*cmp_int_func_t) (const int*, const int*);
+Declaram un nou tip de date numit cmp_int_func_t care reprezinta un pointer catre o functie care asteapta doua argumente, ambele fiind pointeri catre int
 
+```c
+typedef bool (*cmp_int_func_t) (const int*, const int*);
+```
+
+Functia cmp este o functie de comparare care va fi folosita pentru verificarea sortarii. Functiile de comparare sunt esentiale in sortare - acestea primesc doua elemente dintre cele care se vor sorta si le compara. Daca primul este mai mic decat al doilea si functia returneaza "true" atunci sortarea va fi in ordine crescatoare.  
+
+```c
 bool cmp(const int *a, const int *b) {
     return *a <= *b;
 }
+```
 
-/*functii legate de masurarea timpului*/
+Urmatoarele doua functii reprezinta implementarea unui cronometru folosing structura timeval. Cu ajutorul acestor functii se poate masura timpul scurs intre doua puncte din cod.  
 
+create_start_point aloca memorie pentru o structura de tip timeval utilizand malloc. Apoi, capteaza momentul de timp curent folosind functia gettimeofday() si il stocheaza in structura t, returnand t
+
+```c
 struct timeval *create_start_point() {
     struct timeval *t = (struct timeval *) malloc(sizeof(struct timeval));
     gettimeofday(t, NULL);
     return t;
 }
+```
 
+Functia stop_watch_us primeste un pointer catre o structura de tip timeval (care reprezinta momentul initial al masurarii). Capteaza momentul curent in t2, obtine valorile ambelor momente in microsecunde si returneaza diferenta dintre ele. 
+
+uint64_t este un tip de numere intregi definit in stdint.h care reprezinta un unsigned int pe 64 de biti, echivalent in cele mai multe cazuri cu un unsigned long long
+
+```c
 uint64_t stop_watch_us(const struct timeval *t1) {
     struct timeval t2;
     gettimeofday(&t2, NULL);
@@ -40,7 +54,11 @@ uint64_t stop_watch_us(const struct timeval *t1) {
 
     return timestamp2 - timestamp1;
 }
+```
+Schimba valorile a doua variabile intre ele
 
+
+```c
 /*schimba valoarea a doua variabile*/
 
 void data_swap(void *data1, void *data2, size_t item_size) {
@@ -51,6 +69,10 @@ void data_swap(void *data1, void *data2, size_t item_size) {
     free(tmp);
 }
 
+```
+
+
+```c
 /* Functii care implementeaza algoritmi de sortare*/
 
 /* Bubble sort */
@@ -143,6 +165,20 @@ void selection_sort(int a[], int len) {
     }
 }
 
+
+```
+
+data_equal primeste doua pointere catre baza a doua blocuri de memorie (matrici) si un parametru dimensional de tip size_t (care este in realitate tot un unsigned long long). Functia va compara, octet cu octet, continutul celor doua blocuri de memorie si va returna false la identificarea primei diferente. 
+
+Comparatia se face cu conditionalul: ` *((unsigned char *)data1 + i) != *((unsigned char *)data2 + i)` care foloseste aritmetica pointerilor pentru a se pozitiona pe al i-lea octet de la cele doua adrese de baza (data1 si data2). Astfel: 
+
+- `(unsigned char *)data1` si `(unsigned char *)data2` modifica tipul de date ale pointerilor data1 si data2 astfel incat sa fie de tip unsigned char (operatiile urmatoare sa il mute octet cu octet)
+
+- `(unsigned char *)data1 + i` si `(unsigned char *)data2 + i` inseamna adunarea lui i la pointerii de baza (acum de tip char) adica mutarea pointerilor cu i octeti mai la dreapta. 
+
+- `*((unsigned char *)data1 + i)` si `*((unsigned char *)data2 + i)` inseamna dereferentiaza pointerul, obtinand valoarea octetilor de la adresele de memorie respective (data1 + i si data2 + i)
+
+```c
 /* Verifica daca doua blocuri de memorie sunt identice*/
 
 bool data_equal(const void *data1, const void *data2, size_t item_size) {
@@ -153,8 +189,32 @@ bool data_equal(const void *data1, const void *data2, size_t item_size) {
     }
     return true;
 }
+```
 
-/* Verifica daca o anumita matrice este sortata*/
+
+sorted_assert verifica daca o matrice este corect sortata. Argumentele sunt: 
+
+- raw_data_start - pointer catre baza vectorului de date nesortate
+- raw data end - pointer catre finalul vectorului de date nesortate
+- sorted_data_start - pointer catre baza vectorului de date sortate
+- sorted_data_end - pointer catre finalul vectorului de date sortate
+- item_size - dimensiunea in octeti a datelor sortate (char, int, etc.)
+- cmp_func - functia de sortare. 
+
+In continuare functia va aloca un vector de date de tip boolean care are aceeasi dimensiune cu numarul de elemente din vectorul nesortat si se va asigura ca toate elementele acestuia sunt false: 
+
+```c
+size_t count = (raw_data_end - raw_data_start) / item_size;
+bool *used = (bool *) malloc(sizeof(bool) * count);
+for (int i = 0; i < count; i++) {
+        used[i] = false;
+}
+```
+urmatorul ciclu while verifica daca toate elementele din vectorul nesortat se regasesc in vectorul sortat. 
+
+Ultima verificare preia perechi de elemente succesive din matricea sortata si verifica daca acestea corespund functiei de comparare utilizata. 
+
+```c
 
 bool sorted_assert(
         const void *raw_data_start, const void *raw_data_end,
@@ -200,6 +260,28 @@ bool sorted_assert(
     return true;
 }
 
+```
+
+functia sort_test aplica un anumit algoritm de sortare asupra unui vector. Primeste urmatoarele argumente
+
+- data[] - datele care trebuie sortate
+- len - numarul de elemente din vector
+- void (*sort_func)(int [], int), pointer catre functia de sortare 
+- cmp_func_t cmp_func numele functiei de sortare
+
+`int *sort_data = (int *) malloc(sizeof(int) * len );` aloca memorie pentru un nou vector, sort_data
+`memcpy(sort_data, data, sizeof(int) * len);` copiaza tot ce se afla in data in noul vector, sort_data
+`struct timeval *start_point = create_start_point();` creaza un punct de pornire al cronometrului
+`sort_func(sort_data, len);` lanseaza functia de sortare 
+
+Dupa executia functiei de sortare, se opreste cronometrul (`stop_watch_us(start_point)`) si se afiseaza rezultatele, impartite la 1000 (cronometrul opereaza cu microsecunde)
+
+vectorii in aceasta functie (data si sort_data) sunt pointeri deci pot fi transmisi direct catre alte functii. Pentru a testa corectitudinea algoritmului de sortare, se apeleaza in continuare functia `sorted_assert(data, data + len, sort_data, sort_data + len, sizeof(int), cmp_func)` care returneaza false sau true. 
+
+Dupa aceea se elibereaza memoria alocata manual in interiorul functiei (start point si sort_data)
+
+```c
+
 /*functie dispatch care aplica algoritmul de sortare ales*/
 
 void sort_test(
@@ -228,6 +310,14 @@ void sort_test(
     free(sort_data);
     free(start_point);
 }
+
+```
+
+Functia main a programului care genereaza un vector de ARR_SIZE cu elemente aleatoare iar apoi cheama succesiv functia sort_test folosind fiecare algoritm de sortare. 
+
+Prin utilizarea numelor de functii fara paranteze si fara sa fie definite ca siruri de caractere (nu sunt puse intre ghilimele) ne asiguram ca functiile se transforma in pointeri.
+
+```c
 
 int main() {
     srandom((unsigned) time(NULL));
