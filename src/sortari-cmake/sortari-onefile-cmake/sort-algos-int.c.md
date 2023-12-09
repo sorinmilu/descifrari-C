@@ -57,7 +57,6 @@ uint64_t stop_watch_us(const struct timeval *t1) {
 ```
 Schimba valorile a doua variabile intre ele
 
-
 ```c
 /*schimba valoarea a doua variabile*/
 
@@ -73,8 +72,17 @@ void data_swap(void *data1, void *data2, size_t item_size) {
 
 Urmatoarele functii implementeaza algoritmi de sortare
 
+Bubble sort
+
+Bubble sort imparte vectorul in doua regiuni: una sortata (aflata la partea superioara a vectorului) si una nesortata. Limita dintre cele doua regiuni este marcata de variabila "stop". 
+
+La inceputul algoritmului regiunea sortata este goala (stop = len - 1). Fiecare trecere prin matrice garanteaza ca ultima valoare inspectata va fi cea mai mare (sau cea mai mica, daca sortarea este inversa). Attfel, urmatoarea trecere a bulei interne va parcurge cu un element mai putin. 
+
+`for (int stop = len - 1; stop > 0; stop--) {` Aceasta linie reprezinta bucla externa a algoritmului de sortare. Aceasta cicleaza intre finalul vectorului (len-1) si inceputul zonei nesortate (stop)
+
+`for (int i = 0; i < stop; i++) {` - bucla interna a algoritmului de sortare. Aceasta verifica fiecare pereche de elemente ale vectorului si daca ordinea lor nu este corecta (`if (a[i] > a[i + 1]) {`) le inverseaza (`data_swap(a + i, a + i + 1, sizeof(int));`). 
+
 ```c
-/* Functii care implementeaza algoritmi de sortare*/
 
 /* Bubble sort */
 void bubble_sort(int a[], int len) {
