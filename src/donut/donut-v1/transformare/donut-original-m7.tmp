@@ -10,11 +10,13 @@ int main() {
   int scrw = 80;
   int scrh = 20;
   int vector = scrw * scrh;
-  int depth = 5;  //controleaza distanta intre "camera" si obiect
-  int screendepth = 6;
+  int depth = 5;  //controleaza distanta intre ecran si obiect
+  int screendepth = 2; //distanta dintre privitor si ecran
   int scalex = 20;
   int scaley = 15;
-
+  char shade[] = ".,-~:;=!*#$@";
+  float theta_spacing = 0.04; //unghiul de rotatie incrementala al cercului care deseneaza torul
+  float phi_spacing = 0.02; // unghiul de rotatie al torului in jurul axei y
 
   float A = 0, B = 0, i, j;
 
@@ -25,8 +27,8 @@ int main() {
   for (;;) {
     memset(b, 32, vector);
     memset(z, 0, vector * 4);
-    for (j = 0; TWPI > j; j += 0.07) {
-      for (i = 0; TWPI > i; i += 0.02) {
+    for (j = 0; TWPI > j; j += theta_spacing) {
+      for (i = 0; TWPI > i; i += phi_spacing) {
         float c = sin(i);
         float d = cos(j);
         float e = sin(A);
@@ -45,7 +47,7 @@ int main() {
         int N = 8 * ((f * e - c * d * g) * m - c * d * e - f * g - l * d * n);
         if (scrh > y && y > 0 && x > 0 && scrw > x && D > z[o]) {
           z[o] = D;
-          b[o] = ".,-~:;=!*#$@"[N > 0 ? N : 0];
+          b[o] = shade[N > 0 ? N : 0];
         }
       } 
     }

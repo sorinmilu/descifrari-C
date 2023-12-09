@@ -13,7 +13,11 @@ int main() {
   int scaley = 15;
   float angle_increment_y = 0.04;
   float angle_increment_x = 0.06;
+
   char shade[] = ".,-~:;=!*#$@";
+  float theta_spacing = 0.04; //unghiul de rotatie incrementala al cercului care deseneaza torul
+  float phi_spacing = 0.02; // unghiul de rotatie al torului in jurul axei y
+
   float angle_y = 0, angle_x = 0, i, j;
 
   float z[vector];
@@ -23,8 +27,8 @@ int main() {
   for (;;) {
     memset(b, 32, vector);
     memset(z, 0, vector * 4);
-    for (j = 0; 6.28 > j; j += 0.07) {
-      for (i = 0; 6.28 > i; i += 0.02) {
+    for (j = 0; 6.28 > j; j += theta_spacing) {
+      for (i = 0; 6.28 > i; i += phi_spacing) {
         float c = sin(i);
         float d = cos(j);
         float e = sin(angle_y);

@@ -1,12 +1,22 @@
+
+In aceasta etapa identificam variabilele care sunt importante pentru proiectia pe ecran. 
+
+```c
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+```
 
+```c
 int k;
 int main() {
   int scrw = 80;
   int scrh = 20;
   int vector = scrw * scrh;
+
+  ```
+  
+  ```c
   int depth = 5; 
   int screendepth = 2;
   int scalex = 20;
@@ -14,6 +24,10 @@ int main() {
   float angle_increment_y = 0.04;
   float angle_increment_x = 0.06;
   char shade[] = ".,-~:;=!*#$@";
+  ```
+  
+  
+  ```c
   float angle_y = 0, angle_x = 0, i, j;
 
   float z[vector];
