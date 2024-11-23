@@ -1,3 +1,8 @@
+
+# Structura programului
+
+![Server](server.png)
+
 # Includerea bibliotecilor
 
 ```c

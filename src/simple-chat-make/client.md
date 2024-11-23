@@ -1,3 +1,8 @@
+
+# Structura programului
+
+![Structura principala](client.png)
+
 # Includerea bibliotecilor
 
 ```c
