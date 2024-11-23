@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
                     printf("\nServer disconnected.\n");
                     close(sockfd);
                     exit(0); // Exit the client program
-                else if (result == -1)  {
+                } else if (result == -1)  {
                     perror("read()");
                     close(sockfd);
                     exit(1);
