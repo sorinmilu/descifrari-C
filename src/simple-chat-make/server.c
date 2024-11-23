@@ -122,8 +122,18 @@ int main(int argc, char *argv[]) {
                  //read data from open socket
                  result = read(fd, msg, MSG_SIZE);
                  printf("%s", msg);
-                 if(result==-1) perror("read()");
-                 else if(result>0){
+                 if(result==-1) {
+                  perror("read()");
+                 } else if (result == 0) {
+                     printf("Client %d disconnected.\n", fd);
+                     exitClient(fd, &readfds, fd_array, &num_clients);
+                     sprintf(msg, "MClient %d has left the chat.\n", fd);
+
+                     for (i = 0; i < num_clients; i++) { // Trimite mesajul tuturor clienților
+                            write(fd_array[i], msg, strlen(msg));
+                     }
+
+                 } else if(result>0) {
                     /*read 2 bytes client id*/
                     sprintf(kb_msg,"M%2d",fd);
                     msg[result]='\0';

@@ -158,13 +158,23 @@ Acest bloc prelucreaza mesajul care vine de la server (printeazas continutul la 
              if(fd==sockfd){   /* Acceptă date de la server */
                 
                 result = read(sockfd, msg, MSG_SIZE); // Citește mesajul de la server
-                msg[result] = '\0';  /* Termină șirul cu null */
-                printf("%s", msg +1); // Afișează mesajul (excludând primul caracter)
-                
-                if (msg[0] == 'X') { // Dacă mesajul începe cu `X`
-                    close(sockfd); // Închide socket-ul
-                    exit(0); // Termină programul
-                }                             
+                 if (result == 0) {                        // Server closed
+                    printf("\nServer disconnected.\n");    // afisam mesajul la consola
+                    close(sockfd);                         // inchidem socketul
+                    exit(0); // Exit the client program
+                } else if (result == -1)  {
+                    perror("read()"); 
+                    close(sockfd);
+                    exit(1);
+                } else {
+                    msg[result] = '\0';  /* Termină șirul cu null */
+                    printf("%s", msg +1); // Afișează mesajul (excludând primul caracter)
+                    
+                    if (msg[0] == 'X') { // Dacă mesajul începe cu `X`
+                        close(sockfd); // Închide socket-ul
+                        exit(0); // Termină programul
+                    }                             
+                }
              }
 ```
 
