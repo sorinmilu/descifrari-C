@@ -159,8 +159,20 @@ Daca comunicarea se face pe un client deja existent, se prelucreaza mesajul si s
                         }
                     } else if (fd) { // Dacă există activitate pe un client
                         result = read(fd, msg, MSG_SIZE); // Citește datele de la client
-                        if (result == -1) perror("Eroare la citire()"); // Mesaj de eroare la citire
-                        else if (result > 0) { // Dacă există date citite
+                        if (result == -1) {
+                            perror("Eroare la citire()"); // Mesaj de eroare la citire
+                        } else if (result == 0) {
+                            printf("Client %d disconnected.\n", fd);
+                            exitClient(fd, &readfds, fd_array, &num_clients);
+                            
+                            sprintf(msg, "MClient %d has left the chat.\n", fd); //Pregateste mesajul care anunta iesirea clientului
+
+                            for (i = 0; i < num_clients; i++) { // Trimite mesajul tuturor clienților
+                                write(fd_array[i], msg, strlen(msg));
+                            }
+
+
+                        } else if (result > 0) { // Dacă există date citite
                             sprintf(kb_msg, "M%2d", fd); // Creează prefix pentru mesaj
                             msg[result] = '\0'; // Terminator pentru șir
                             strcat(kb_msg, msg + 1); // Concatenează mesajul clientului
@@ -175,7 +187,7 @@ Daca comunicarea se face pe un client deja existent, se prelucreaza mesajul si s
                                 exitClient(fd, &readfds, fd_array, &num_clients); // Deconectează clientul
                             }
                         }
-                    } else { // Dacă un client deconectat este detectat
+                    } else { // Dacă un client deconectat este detectat - in principiu
                         exitClient(fd, &readfds, fd_array, &num_clients); // Șterge clientul
                     }
                 }
