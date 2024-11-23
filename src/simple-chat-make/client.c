@@ -78,13 +78,23 @@ int main(int argc, char *argv[]) {
                 
                 //read data from open socket
                 result = read(sockfd, msg, MSG_SIZE);
-                msg[result] = '\0';  /* Terminate string with null */
-                printf("%s", msg +1);
-                
-                if (msg[0] == 'X') {                   
+                if (result == 0) {
+                    printf("\nServer disconnected.\n");
                     close(sockfd);
-                    exit(0);
-                }                             
+                    exit(0); // Exit the client program
+                else if (result == -1)  {
+                    perror("read()");
+                    close(sockfd);
+                    exit(1);
+                } else {
+                  msg[result] = '\0';  /* Terminate string with null */
+                  printf("%s", msg +1);
+                
+                  if (msg[0] == 'X') {                   
+                      close(sockfd);
+                      exit(0);
+                  }       
+                }                      
              }
              else if(fd == 0){ /*process keyboard activiy*/
                // printf("client - send\n");
